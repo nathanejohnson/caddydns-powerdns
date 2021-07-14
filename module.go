@@ -1,6 +1,7 @@
 package template
 
 import (
+	"fmt"
 	"net/url"
 
 	"github.com/caddyserver/caddy/v2"
@@ -29,6 +30,21 @@ func (p *Provider) Provision(ctx caddy.Context) error {
 	p.Provider.ServerID = caddy.NewReplacer().ReplaceAll(p.Provider.ServerID, "")
 	p.Provider.ServerURL = caddy.NewReplacer().ReplaceAll(p.Provider.ServerURL, "")
 	p.Provider.Debug = caddy.NewReplacer().ReplaceAll(p.Provider.Debug, "")
+
+	return nil
+}
+
+// Validate validates the config.  Implements caddy.Validator.
+func (p *Provider) Validate() error {
+	if p.Provider.APIToken == "" {
+		return fmt.Errorf("missing api_token")
+	}
+	if p.Provider.ServerURL == "" {
+		return fmt.Errorf("missing server_url")
+	}
+	if _, err := url.Parse(p.Provider.ServerURL); err != nil {
+		return fmt.Errorf("invalid server_url")
+	}
 	return nil
 }
 
@@ -79,9 +95,6 @@ func (p *Provider) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
 	}
 	if p.Provider.ServerURL == "" {
 		return d.Err("missing server_url")
-	}
-	if _, err := url.Parse(p.Provider.ServerURL); err != nil {
-		return d.Err("invalid server_url")
 	}
 
 	return nil
